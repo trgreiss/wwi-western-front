@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>*,*::before,*::after{box-sizing:border-box}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Western Front 1914–1918</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+/* Layout: a survey sheet lying on a dark desk. Map left, the day's dispatch and chapter index right, playback rail under the map. Single deliberate look (no light/dark swap). */
+:root{
+  color-scheme: dark;
+  --desk:#211912; --desk-2:#2c221a; --rule:#4a3b2c;
+  --parch:#e9dcbd; --parch-dim:#b3a385; --parch-faint:#857862;
+  --ink:#33261a; --ink-soft:#6a5843;
+  --front:#b3261e; --brass:#c9a45c;
+  --display:"IM Fell English SC","IM Fell English",Georgia,serif;
+  --fell:"IM Fell English",Georgia,serif;
+  --body:"EB Garamond",Georgia,"Times New Roman",serif;
+}
+html,body{height:100%}
+body{background:var(--desk);background-image:radial-gradient(120% 90% at 30% 0%,var(--desk-2),var(--desk) 70%);color:var(--parch);font-family:var(--body);font-size:17px;line-height:1.45}
+.wrap{max-width:1560px;margin:0 auto;padding-block:18px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.mast{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 24px}
+.eyebrow{margin:0;font-family:var(--display);letter-spacing:.14em;font-size:14px;color:var(--brass)}
+h1{margin:0;font-family:var(--fell);font-weight:400;font-size:clamp(30px,4.6vw,50px);line-height:1.05;font-variant-numeric:tabular-nums;text-wrap:balance}
+.stats{margin:0;display:flex;flex-wrap:wrap;gap:4px 22px;font-size:15px;color:var(--parch-dim);font-variant-numeric:tabular-nums}
+.stats b{font-weight:500;color:var(--parch)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+.mapcol{min-width:0;display:flex;flex-direction:column;gap:12px}
+.mapframe{position:relative;width:100%;max-width:max(420px,calc((100vh - 235px)*1.357));aspect-ratio:726/535;background:#d9ccab;box-shadow:0 1px 0 #000,0 14px 34px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.5);border-radius:2px;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+canvas.drag{cursor:grabbing}
+#tip{position:absolute;z-index:3;max-width:240px;padding:7px 10px;background:var(--parch);color:var(--ink);border:1px solid var(--ink-soft);box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:14.5px;line-height:1.3;pointer-events:none}
+#tip strong{display:block;font-family:var(--display);font-weight:400;font-size:15px;letter-spacing:.03em}
+#tip span{color:var(--ink-soft);font-style:italic}
+.zoom{position:absolute;right:16px;bottom:16px;z-index:2;display:flex;flex-direction:column;gap:4px}
+.zoom button{width:30px;height:30px;padding:0;font:400 19px/1 var(--fell);background:rgba(233,220,189,.92);color:var(--ink);border:1px solid var(--ink-soft);border-radius:2px;cursor:pointer}
+.zoom button:hover{background:#f4ead0}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+#play{min-width:104px;padding:8px 16px;font:400 17px/1 var(--display);letter-spacing:.06em;color:var(--desk);background:var(--brass);border:0;border-radius:2px;cursor:pointer}
+#play:hover{background:#dbb86f}
+.scrub{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:2px}
+#scrub{width:100%;margin:0;accent-color:var(--brass);cursor:pointer}
+.ticks{position:relative;height:17px;margin:0 8px;font-size:13px;color:var(--parch-faint);font-variant-numeric:tabular-nums}
+.ticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.ticks span::before{content:"";position:absolute;left:50%;top:-5px;height:5px;border-left:1px solid var(--parch-faint)}
+.opt{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--parch-dim);white-space:nowrap}
+.opt select{font:inherit;font-size:15px;color:var(--parch);background:var(--desk-2);border:1px solid var(--rule);border-radius:2px;padding:3px 6px}
+.opt input{accent-color:var(--brass);width:16px;height:16px;margin:0}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--parch);outline-offset:2px}
+.legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14.5px;color:var(--parch-dim)}
+.legend li{display:flex;align-items:center;gap:8px}
+.legend svg{flex:none}
+.side{min-width:0;display:flex;flex-direction:column;gap:18px}
+.dispatch{background:var(--parch);color:var(--ink);padding:18px 20px 20px;box-shadow:0 10px 24px rgba(0,0,0,.45);border-radius:2px;background-image:linear-gradient(180deg,rgba(255,255,255,.18),rgba(120,90,50,.08))}
+.dispatch .when{margin:0 0 4px;font-size:14.5px;font-style:italic;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.dispatch h2{margin:0 0 8px;font-family:var(--fell);font-weight:400;font-size:27px;line-height:1.1;text-wrap:balance}
+.dispatch p.text{margin:0;font-size:16.5px;min-height:9.2em}
+.dispatch ul{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid rgba(51,38,26,.3);font-size:14.5px;display:grid;gap:3px}
+.dispatch li{display:flex;justify-content:space-between;gap:12px}
+.dispatch li span:last-child{color:var(--ink-soft);font-style:italic;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dispatch li.on span:first-child{color:var(--front)}
+.index h3{margin:0 0 6px;font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:.14em;color:var(--brass)}
+#chapters{list-style:none;margin:0;padding:0;max-height:min(44vh,430px);overflow:auto;border-top:1px solid var(--rule)}
+#chapters button{display:flex;gap:12px;width:100%;padding:6px 6px;text-align:left;font:inherit;font-size:15.5px;color:var(--parch-dim);background:none;border:0;border-bottom:1px solid var(--rule);cursor:pointer}
+#chapters button:hover{color:var(--parch);background:rgba(233,220,189,.05)}
+#chapters button small{flex:none;width:6.6em;font-size:13.5px;color:var(--parch-faint);font-variant-numeric:tabular-nums;padding-top:1px}
+#chapters button[aria-current="true"]{color:var(--parch);background:rgba(201,164,92,.14)}
+#chapters button[aria-current="true"] small{color:var(--brass)}
+.note{margin:0;max-width:78ch;font-size:14px;font-style:italic;color:var(--parch-faint)}
+@media (max-width:980px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .mapframe{max-width:100%}
+  .dispatch p.text{min-height:0}
+  #chapters{max-height:none}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <p class="eyebrow">The Western Front · 1914–1918</p>
+      <h1 id="date">4 August 1914</h1>
+    </div>
+    <p class="stats"><span id="daycount">Day <b>1</b> of 1,561</span><span>Front at its nearest to Paris: <b id="paris">—</b></span></p>
+  </header>
+
+  <div class="layout">
+    <section class="mapcol" aria-label="Map">
+      <div class="mapframe" id="frame">
+        <canvas id="map" role="img" aria-label="Antique-style map of northern France, Belgium and the Rhineland showing the position of the Western Front on the selected date"></canvas>
+        <div id="tip" hidden></div>
+        <div class="zoom"><button id="zin" type="button" aria-label="Zoom in">+</button><button id="zout" type="button" aria-label="Zoom out">−</button></div>
+      </div>
+      <div class="controls">
+        <button id="play" type="button">Play</button>
+        <div class="scrub">
+          <input id="scrub" type="range" min="0" max="100" step="0.02" value="0" aria-label="Position in the war">
+          <div class="ticks" id="ticks" aria-hidden="true"></div>
+        </div>
+        <label class="opt" for="speed">Speed
+          <select id="speed"><option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        </label>
+        <label class="opt" for="follow"><input id="follow" type="checkbox" checked> Follow the action</label>
+      </div>
+      <ul class="legend">
+        <li><svg width="34" height="10" aria-hidden="true"><path d="M1 6 C9 1 14 9 22 5 S31 3 33 5" fill="none" stroke="#b3261e" stroke-width="3" stroke-linecap="round"/></svg>Front line</li>
+        <li><svg width="26" height="14" aria-hidden="true"><defs><pattern id="h" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#cfc5a3"/><line x1="0" y1="0" x2="0" y2="5" stroke="#4c5440" stroke-width="1.6"/></pattern></defs><rect width="26" height="14" fill="url(#h)" stroke="#857862"/></svg>Held by the German armies</li>
+        <li><svg width="34" height="10" aria-hidden="true"><path d="M1 5 H33" fill="none" stroke="#c9b88f" stroke-width="1.6" stroke-dasharray="5 4"/></svg>Earlier line</li>
+        <li><svg width="16" height="16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" stroke="#b3261e" stroke-width="2" stroke-linecap="round"/></svg>Battle in progress</li>
+        <li><svg width="12" height="12" aria-hidden="true"><path d="M3 3 L9 9 M9 3 L3 9" stroke="#b3a385" stroke-width="1.5" stroke-linecap="round"/></svg>Past battle (point at it)</li>
+      </ul>
+    </section>
+
+    <aside class="side">
+      <article class="dispatch" aria-live="polite">
+        <p class="when" id="chWhen"></p>
+        <h2 id="chTitle"></h2>
+        <p class="text" id="chText"></p>
+        <ul id="chBattles"></ul>
+      </article>
+      <nav class="index" aria-label="Chapters">
+        <h3>The course of the war</h3>
+        <ol id="chapters"></ol>
+      </nav>
+    </aside>
+  </div>
+
+  <p class="note">Front lines are simplified from standard histories and are good to within a few kilometres. Before October 1914 the line marks the rough limit of the German advance, not a continuous trench front. Borders are those of August 1914, with Alsace and northern Lorraine inside the German Empire.</p>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- projection ---------- */
+const LON0=-2.0, LON1=9.2, LAT0=46.9, LAT1=52.25;
+const KX=Math.cos(49.6*Math.PI/180)*100;
+const MW=(LON1-LON0)*KX, MH=(LAT1-LAT0)*100;
+const px=lon=>(lon-LON0)*KX, py=lat=>(LAT1-lat)*100;
+const KM=1.112; // km per world unit
+
+/* ---------- time ---------- */
+const DAY0=Date.UTC(1914,7,4);
+const D=s=>{const a=s.split('-').map(Number);return (Date.UTC(a[0],a[1]-1,a[2])-DAY0)/864e5;};
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dt=day=>new Date(DAY0+Math.round(day)*864e5);
+const fmt=day=>{const d=dt(day);return d.getUTCDate()+' '+MONTHS[d.getUTCMonth()]+' '+d.getUTCFullYear();};
+const fmtS=day=>{const d=dt(day);return d.getUTCDate()+' '+MON[d.getUTCMonth()]+' '+d.getUTCFullYear();};
+const range=(s,e)=>{ if(Math.round(s)===Math.round(e)) return fmtS(s); const a=dt(s),b=dt(e);
+  if(a.getUTCFullYear()===b.getUTCFullYear()) return a.getUTCDate()+' '+MON[a.getUTCMonth()]+' – '+fmtS(e);
+  return fmtS(s)+' – '+fmtS(e); };
+
+/* ---------- geography (lon, lat), hand-plotted ---------- */
+const rev=a=>a.slice().reverse();
+const coastFR=[[-2.8,48.6],[-2.0,48.65],[-1.85,48.62],[-1.5,48.63],[-1.57,48.75],[-1.6,48.84],[-1.55,49.0],[-1.6,49.22],[-1.79,49.37],[-1.85,49.52],[-1.94,49.72],[-1.62,49.65],[-1.4,49.7],[-1.26,49.70],[-1.3,49.58],[-1.18,49.42],[-1.12,49.36],[-1.03,49.39],[-0.85,49.36],[-0.62,49.34],[-0.4,49.33],[-0.22,49.28],[-0.05,49.3],[0.07,49.36],[0.23,49.42],[0.42,49.44],[0.25,49.46],[0.10,49.49],[0.07,49.52],[0.17,49.69],[0.37,49.76],[0.62,49.86],[0.85,49.9],[1.08,49.93],[1.25,50.0],[1.37,50.06],[1.52,50.18],[1.66,50.2],[1.55,50.25],[1.56,50.41],[1.58,50.52],[1.57,50.63],[1.60,50.73],[1.58,50.87],[1.7,50.93],[1.85,50.97],[2.13,51.0],[2.37,51.05],[2.55,51.09]];
+const coastBE=[[2.55,51.09],[2.75,51.15],[2.91,51.23],[3.07,51.3],[3.20,51.34],[3.37,51.37]];
+const coastNL=[[3.37,51.37],[3.55,51.40],[3.7,51.37],[3.83,51.34],[4.0,51.37],[4.2,51.38],[4.05,51.43],[3.85,51.44],[3.7,51.46],[3.57,51.44],[3.44,51.53],[3.56,51.6],[3.7,51.67],[3.7,51.73],[3.87,51.82],[4.0,51.9],[4.12,51.98],[4.27,52.11],[4.40,52.20],[4.5,52.35],[4.6,52.7]];
+const coastEN=[[-2.8,50.6],[-2.0,50.6],[-1.95,50.68],[-1.85,50.72],[-1.7,50.73],[-1.55,50.75],[-1.42,50.88],[-1.3,50.83],[-1.1,50.79],[-0.95,50.82],[-0.79,50.72],[-0.6,50.79],[-0.37,50.81],[-0.14,50.82],[0.05,50.77],[0.25,50.74],[0.4,50.83],[0.58,50.85],[0.78,50.93],[0.97,50.91],[1.0,51.03],[1.18,51.08],[1.32,51.13],[1.4,51.18],[1.40,51.25],[1.37,51.31],[1.44,51.36],[1.44,51.39],[1.3,51.39],[1.02,51.36],[0.9,51.38],[0.75,51.44],[0.55,51.45],[0.37,51.46],[0.2,51.48],[0.37,51.5],[0.55,51.51],[0.71,51.53],[0.83,51.54],[0.95,51.62],[0.93,51.72],[0.75,51.72],[0.95,51.76],[1.15,51.79],[1.29,51.85],[1.2,51.95],[1.29,51.94],[1.35,51.96],[1.47,52.03],[1.58,52.08],[1.60,52.15],[1.63,52.25],[1.7,52.4],[1.75,52.7]];
+const iow=[[-1.55,50.67],[-1.3,50.77],[-1.08,50.69],[-1.2,50.58],[-1.32,50.59]];
+const bFRBE=[[2.55,51.09],[2.6,50.85],[2.72,50.8],[2.9,50.70],[3.15,50.78],[3.28,50.53],[3.6,50.50],[3.67,50.32],[4.03,50.35],[4.2,50.27],[4.15,49.98],[4.45,49.94],[4.68,50.0],[4.82,50.17],[4.87,50.15],[4.85,49.80],[5.15,49.72],[5.47,49.50],[5.82,49.55]];
+const bFRLUX=[[5.82,49.55],[5.89,49.50]];
+const bDELUX_S=[[5.89,49.50],[5.98,49.45],[6.13,49.47],[6.37,49.47]];
+const bDELUX_E=[[6.37,49.47],[6.43,49.66],[6.51,49.72],[6.42,49.81],[6.25,49.87],[6.2,49.95],[6.13,50.13],[6.03,50.18]];
+const bBELUX=[[5.82,49.55],[5.87,49.6],[5.9,49.68],[5.75,49.8],[5.72,49.9],[5.85,50.05],[5.97,50.17],[6.03,50.18]];
+const bBEDE=[[6.03,50.18],[5.98,50.3],[5.97,50.42],[6.0,50.55],[5.98,50.68],[6.02,50.755]];
+const bBENL=[[3.37,51.37],[3.45,51.25],[3.6,51.29],[3.9,51.21],[4.25,51.36],[4.45,51.47],[4.78,51.5],[5.05,51.47],[5.25,51.27],[5.55,51.27],[5.85,51.15],[5.72,50.95],[5.65,50.82],[5.7,50.76],[6.02,50.755]];
+const bNLDE=[[6.02,50.755],[6.08,50.92],[5.9,51.0],[6.15,51.17],[6.22,51.38],[6.1,51.6],[5.95,51.82],[6.4,51.85],[6.75,51.9],[6.8,52.0],[6.7,52.1],[7.05,52.25],[7.05,52.7]];
+const bFRDE=[[5.89,49.50],[5.93,49.35],[5.98,49.2],[6.0,49.1],[6.02,48.98],[6.15,48.93],[6.3,48.88],[6.4,48.82],[6.55,48.75],[6.7,48.7],[6.8,48.65],[6.95,48.6],[7.15,48.51],[7.1,48.4],[7.18,48.25],[7.1,48.18],[7.02,48.06],[6.95,47.93],[6.84,47.82],[6.95,47.75],[7.0,47.65],[7.03,47.58],[7.13,47.49]];
+const bFRCH=[[7.13,47.49],[7.0,47.5],[6.94,47.43],[6.88,47.35],[7.0,47.33],[6.85,47.25],[6.7,47.1],[6.45,46.93],[6.3,46.8]];
+const bDECH=[[7.13,47.49],[7.3,47.44],[7.42,47.48],[7.59,47.59],[7.8,47.56],[8.05,47.56],[8.25,47.61],[8.45,47.57],[8.6,47.67],[8.5,47.78],[8.72,47.76],[8.8,47.68],[9.0,47.68],[9.18,47.66],[9.6,47.55]];
+
+const POLY={
+  fr:[...coastFR,...bFRBE.slice(1),...bFRLUX.slice(1),...bFRDE.slice(1),...bFRCH.slice(1),[6.3,46.3],[-3,46.3],[-3,48.6]],
+  be:[...coastBE,...bBENL.slice(1),...rev(bBEDE).slice(1),...rev(bBELUX).slice(1),...rev(bFRBE).slice(1)],
+  lu:[...bBELUX,...rev(bDELUX_E).slice(1),...rev(bDELUX_S).slice(1)],
+  nl:[...coastNL,...rev(bNLDE),...rev(bBENL).slice(1)],
+  de:[...bNLDE,[10,52.7],[10,47.5],...rev(bDECH),...rev(bFRDE).slice(1),...bDELUX_S.slice(1),...bDELUX_E.slice(1),...bBEDE.slice(1)],
+  ch:[...bDECH,[10,47.5],[10,46.3],[6.3,46.3],...rev(bFRCH).slice(0,-1)],
+  en:[...coastEN,[-2.8,52.7]],
+  iw:iow
+};
+const WASH={ // fill, edge band
+  fr:['#eddcc2','rgba(196,96,92,.34)'], be:['#eee1b9','rgba(204,160,52,.42)'], lu:['#e9dcc4','rgba(140,104,160,.42)'],
+  nl:['#eddbb8','rgba(208,128,58,.36)'], de:['#e4ddba','rgba(104,138,86,.40)'], ch:['#eadcbc','rgba(170,112,84,.34)'],
+  en:['#ecdcc0','rgba(190,96,120,.32)'], iw:['#ecdcc0','rgba(190,96,120,.32)']
+};
+const BORDERS=[bFRBE,bFRLUX,bFRDE,bFRCH,bDECH,bBENL,bNLDE,bBEDE,bBELUX,bDELUX_S,bDELUX_E];
+const RIVERS=[
+  [[0.42,49.44],[0.75,49.45],[1.10,49.44],[1.25,49.3],[1.5,49.1],[1.9,49.0],[2.1,49.0],[2.25,48.9],[2.35,48.86],[2.48,48.72],[2.66,48.54],[2.95,48.38],[3.5,48.49],[3.8,48.5],[4.08,48.30],[4.4,48.0],[4.6,47.7],[4.7,47.5]],
+  [[2.42,48.82],[2.65,48.87],[2.88,48.96],[3.1,48.95],[3.40,49.05],[3.64,49.07],[3.96,49.04],[4.37,48.96],[4.58,48.72],[4.95,48.64],[5.1,48.3],[5.14,48.11],[5.33,47.86]],
+  [[2.1,49.0],[2.4,49.2],[2.6,49.3],[2.83,49.42],[3.0,49.58],[3.2,49.6],[3.37,49.66],[3.5,49.8],[3.63,49.90],[4.08,49.92]],
+  [[2.83,49.42],[3.1,49.4],[3.33,49.38],[3.6,49.4],[3.90,49.40],[4.15,49.48],[4.37,49.51],[4.58,49.47],[4.70,49.40],[4.85,49.25],[4.90,49.09],[5.0,48.95]],
+  [[1.62,50.2],[1.83,50.11],[2.08,49.98],[2.30,49.89],[2.6,49.9],[2.8,49.94],[2.93,49.93],[3.0,49.82],[3.07,49.75],[3.29,49.85]],
+  [[5.5,48.0],[5.70,48.36],[5.62,48.7],[5.54,48.89],[5.45,49.05],[5.38,49.16],[5.27,49.3],[5.19,49.49],[5.05,49.63],[4.94,49.70],[4.72,49.77],[4.75,50.0],[4.82,50.14],[4.91,50.26],[4.87,50.47],[5.24,50.52],[5.57,50.64],[5.69,50.85],[5.8,51.05],[5.98,51.19],[6.17,51.37],[6.1,51.6],[5.97,51.75],[5.6,51.78],[5.3,51.75],[4.7,51.72],[4.4,51.75],[4.1,51.85]],
+  [[6.9,47.9],[6.6,48.05],[6.45,48.17],[6.2,48.45],[5.89,48.68],[6.07,48.78],[6.05,48.90],[6.1,49.02],[6.18,49.12],[6.17,49.36],[6.37,49.47],[6.51,49.72],[6.64,49.76],[6.9,49.85],[7.1,49.95],[7.17,50.15],[7.4,50.25],[7.60,50.36]],
+  [[9.6,47.6],[9.17,47.66],[8.8,47.68],[8.45,47.58],[8.05,47.56],[7.59,47.56],[7.52,47.8],[7.57,48.0],[7.65,48.3],[7.80,48.58],[8.1,48.9],[8.3,49.0],[8.4,49.25],[8.46,49.49],[8.35,49.75],[8.27,50.0],[7.9,49.97],[7.75,50.1],[7.60,50.36],[7.3,50.55],[7.1,50.73],[6.96,50.94],[6.77,51.23],[6.74,51.43],[6.62,51.66],[6.25,51.83],[5.86,51.85],[5.4,51.9],[5.1,51.85],[4.8,51.88],[4.48,51.92],[4.1,51.97]],
+  [[4.2,51.38],[4.32,51.3],[4.40,51.22],[4.25,51.1],[3.95,51.03],[3.72,51.05],[3.6,50.85],[3.45,50.72],[3.39,50.61],[3.45,50.45],[3.52,50.36],[3.3,50.25],[3.23,50.18]],
+  [[4.87,50.47],[4.6,50.42],[4.44,50.41],[4.2,50.33],[3.97,50.28],[3.75,50.15]],
+  [[0.2,51.48],[0.0,51.5],[-0.12,51.5],[-0.35,51.45],[-0.6,51.48],[-0.9,51.55]]
+];
+const RIVER_LABELS=[['Seine',1.42,49.2],['Marne',4.15,49.03],['Oise',2.42,49.28],['Aisne',4.45,49.57],['Somme',2.08,50.04],['Meuse',5.72,48.52],['Meuse',5.38,50.57],['Moselle',6.82,49.9],['Rhine',7.72,48.25],['Rhine',6.72,51.55],['Scheldt',3.52,50.88],['Thames',-0.75,51.58]];
+// name, lon, lat, tier, left?
+const CITIES=[
+ ['Paris',2.35,48.86,0],['London',-0.12,51.51,0],['Brussels',4.35,50.85,0],
+ ['Antwerp',4.40,51.22,1],['Amiens',2.30,49.89,1,1],['Calais',1.85,50.95,1],['Lille',3.06,50.63,1],['Reims',4.03,49.26,1],['Verdun',5.38,49.16,1,1],['Nancy',6.18,48.69,1],['Metz',6.18,49.12,1],['Strasbourg',7.75,48.58,1],['Liège',5.57,50.64,1],['Cologne',6.96,50.94,1],['Luxembourg',6.13,49.61,1],['Ypres',2.89,50.85,1,1],['Arras',2.78,50.29,1,1],['Rouen',1.10,49.44,1],['Basel',7.59,47.56,1],['Belfort',6.86,47.64,1,1],['Mons',3.95,50.45,1],['Sedan',4.94,49.70,1],['Koblenz',7.6,50.36,1],['Mainz',8.27,50.0,1],['Le Havre',0.11,49.49,1],['Dover',1.31,51.13,1,1],['Rotterdam',4.48,51.92,1],['Ghent',3.72,51.05,1],['Troyes',4.08,48.30,1],['Dunkirk',2.38,51.03,1,1],['Compiègne',2.83,49.42,1,1],['Saint-Quentin',3.29,49.85,1],
+ ['Ostend',2.92,51.23,2],['Bruges',3.22,51.21,2],['Namur',4.87,50.47,2],['Cambrai',3.23,50.18,2],['Soissons',3.33,49.38,2],['Châlons',4.36,48.96,2],['Épinal',6.45,48.17,2],['Mulhouse',7.34,47.75,2],['Boulogne',1.61,50.73,2],['Charleroi',4.44,50.41,2],['Maubeuge',3.97,50.28,2],['Laon',3.62,49.56,2],['Château-Thierry',3.40,49.05,2],['Toul',5.89,48.68,2,1],['Nieuport',2.75,51.13,2,1],['Lens',2.83,50.43,2],['Douai',3.08,50.37,2],['Péronne',2.93,49.93,2],['Noyon',3.0,49.58,2],['Mézières',4.72,49.77,2,1],['Saint-Mihiel',5.54,48.89,2,1],['Aachen',6.08,50.78,2],['Trier',6.64,49.76,2],['Dieppe',1.08,49.92,2],['Abbeville',1.83,50.11,2],['Meaux',2.88,48.96,2],['Épernay',3.95,49.04,2],['Bar-le-Duc',5.16,48.77,2],['Colmar',7.36,48.08,2],['Tournai',3.39,50.61,2],['Courtrai',3.26,50.83,2],['Valenciennes',3.52,50.36,2],['Montdidier',2.57,49.65,2,1],['Albert',2.65,50.0,2,1],['Bapaume',2.85,50.10,2],['Thionville',6.17,49.36,2],['Maastricht',5.69,50.85,2],
+ ['Passchendaele',3.02,50.90,3],['Messines',2.90,50.76,3],['Dixmude',2.86,51.03,3],['Armentières',2.88,50.69,3,1],['La Bassée',2.81,50.53,3],['Neuve Chapelle',2.78,50.58,3,1],['Loos',2.79,50.46,3,1],['Vimy',2.81,50.37,3],['Bullecourt',2.93,50.19,3],['Thiepval',2.69,50.05,3,1],['Villers-Bretonneux',2.52,49.87,3,1],['Cantigny',2.49,49.66,3,1],['Roye',2.79,49.70,3],['La Fère',3.37,49.66,3],['Craonne',3.79,49.44,3],['Fismes',3.68,49.31,3],['Dormans',3.64,49.07,3],['Belleau',3.29,49.08,3,1],['Douaumont',5.44,49.22,3],['Vaux',5.47,49.2,3],['Varennes',5.03,49.23,3,1],['Pont-à-Mousson',6.05,48.90,3],['Thann',7.10,47.81,3,1],['Kemmel',2.83,50.78,3,1],['Bailleul',2.73,50.74,3,1],['Hazebrouck',2.54,50.72,3,1],['Le Cateau',3.54,50.10,3],['Guise',3.63,49.90,3],['Stenay',5.19,49.49,3],['Rethel',4.37,49.51,3],['Vouziers',4.70,49.40,3],['Ham',3.07,49.75,3],['Flesquières',3.12,50.12,3,1],['Montfaucon',5.13,49.27,3],['Senlis',2.59,49.21,3],['Vitry-le-François',4.58,48.72,3]
+];
+// printed labels: text, lon, lat, size (world units), letter-spacing, style
+const PRINT=[
+ ['FRANCE',3.75,47.68,22,14,'c'],['BELGIUM',4.62,50.66,11,6,'c'],['GERMAN',8.05,50.72,15,8,'c'],['EMPIRE',8.05,50.47,15,8,'c'],
+ ['NETHERLANDS',5.45,51.98,10,5,'c'],['ENGLAND',-0.55,51.82,14,8,'c'],['SWITZERLAND',8.25,47.2,10,5,'c'],['LUX.',6.1,49.78,5,1,'c'],
+ ['Flanders',3.3,51.0,6.5,0,'r'],['Artois',2.3,50.47,6.5,0,'r'],['Picardy',2.15,49.72,6.5,0,'r'],['Champagne',4.35,48.86,6.5,0,'r'],['Normandy',0.3,49.02,7,0,'r'],
+ ['Ardennes',5.32,50.02,6.5,0,'r'],['Lorraine',6.2,48.42,6.5,0,'r'],['Alsace',7.55,48.3,6.5,0,'r'],['Vosges',6.72,47.98,5.5,0,'r'],['Kent',0.72,51.22,6,0,'r'],
+ ['Burgundy',4.7,47.35,7,0,'r'],['Rhineland',6.75,50.42,6.5,0,'r'],['Palatinate',7.85,49.42,6.5,0,'r'],['Argonne',4.98,49.1,4.5,0,'r'],
+ ['The English Channel',-0.55,50.24,9,1.2,'s'],['La Manche',-0.55,50.1,6,1,'s'],['North Sea',3.05,52.1,9,1.5,'s'],['Strait of Dover',1.52,51.05,4,0,'s']
+];
+
+/* ---------- front-line shapes, north to south, in seven sectors ---------- */
+const SAL=[[5.6,49.07],[5.57,49.0],[5.53,48.93],[5.52,48.885],[5.6,48.855],[5.7,48.86],[5.8,48.87],[5.9,48.88],[5.98,48.9],[6.05,48.93]];
+const ETAIL=[[4.1,49.28],[4.15,49.22],[4.3,49.2],[4.42,49.2],[4.55,49.215],[4.65,49.23],[4.78,49.205],[4.9,49.2],[5.07,49.2],[5.1,49.22]];
+const ATAIL=[[2.93,50.73],[2.92,50.69],[2.87,50.65],[2.85,50.6],[2.79,50.58],[2.76,50.54],[2.78,50.52]];
+const AHEAD=[[2.75,51.15],[2.8,51.09],[2.87,51.03]];
+const BHEAD=[[2.78,50.52],[2.78,50.48],[2.8,50.46]];
+const CS=[[3.19,49.96],[3.23,49.9],[3.25,49.85],[3.29,49.78],[3.33,49.72],[3.34,49.66],[3.36,49.58]];
+const DBLU=[[3.2,49.4],[3.2,49.33],[3.17,49.27],[3.15,49.2],[3.2,49.12],[3.28,49.07],[3.4,49.045]];
+const DMAL=[[3.36,49.52],[3.4,49.49],[3.45,49.48],[3.52,49.475],[3.62,49.465],[3.72,49.455],[3.8,49.45],[3.86,49.43],[3.9,49.4]];
+const CMIC=[[2.65,50.12],[2.63,50.06],[2.63,50.0],[2.62,49.95],[2.6,49.92],[2.55,49.87],[2.51,49.82],[2.47,49.77],[2.47,49.69],[2.49,49.66],[2.55,49.64]];
+const SH={
+ A_k0:[[6.02,50.755],[5.98,50.68],[6.0,50.55]],
+ B_k0:[[6.0,50.55],[5.97,50.42],[5.98,50.3]],
+ C_k0:[[5.98,50.3],[6.03,50.18],[5.97,50.17]],
+ D_k0:[[5.97,50.17],[5.85,50.05],[5.72,49.9],[5.75,49.8]],
+ E_k0:[[5.75,49.8],[5.9,49.68],[5.87,49.6],[5.82,49.55],[5.89,49.50]],
+ F_k0:bFRDE.slice(0,5), G_k0:bFRDE.slice(4),
+ A_k1:[[5.7,50.80],[5.4,50.72],[5.3,50.6]],
+ B_k1:[[5.3,50.6],[5.25,50.5],[5.3,50.35]],
+ C_k1:[[5.3,50.35],[5.5,50.15],[5.6,50.0]],
+ D_k1:[[5.6,50.0],[5.65,49.85],[5.7,49.7]],
+ E_k1:[[5.7,49.7],[5.8,49.58],[5.89,49.50]],
+ G_k1:[[6.02,48.98],[6.3,48.9],[6.55,48.85],[6.85,48.72],[7.05,48.68],[7.2,48.5],[7.2,48.25],[7.15,48.05],[7.2,47.85],[7.25,47.7],[7.2,47.5]],
+ A_k2:[[4.45,51.47],[4.7,51.3],[4.65,51.1],[4.4,51.02],[4.1,50.95]],
+ B_k2:[[4.1,50.95],[3.9,50.75],[3.8,50.55],[3.75,50.42]],
+ C_k2:[[3.75,50.42],[3.95,50.33],[4.2,50.25],[4.5,50.15]],
+ D_k2:[[4.5,50.15],[4.75,50.0],[4.8,49.85],[4.95,49.72]],
+ E_k2:[[4.95,49.72],[5.2,49.6],[5.4,49.5],[5.6,49.42]],
+ F_k2:[[5.6,49.42],[5.75,49.3],[5.8,49.15],[5.85,49.0],[6.02,48.93]],
+ G_k2:[[6.02,48.93],[6.25,48.82],[6.4,48.68],[6.5,48.55],[6.6,48.42],[6.85,48.32],[7.0,48.25],[7.08,48.1],[7.05,47.95],[7.1,47.8],[7.15,47.62],[7.13,47.49]],
+ A_k3:[[4.45,51.47],[4.7,51.3],[4.65,51.1],[4.4,51.02],[4.0,50.95],[3.6,50.8]],
+ B_k3:[[3.6,50.8],[3.3,50.6],[3.0,50.4],[2.75,50.2]],
+ C_k3:[[2.75,50.2],[2.45,50.0],[2.3,49.85],[2.35,49.6],[2.5,49.35],[2.6,49.2],[2.8,49.05]],
+ D_k3:[[2.8,49.05],[2.95,48.92],[3.05,48.8],[3.2,48.68],[3.45,48.66],[3.72,48.72]],
+ E_k3:[[3.72,48.72],[4.0,48.74],[4.3,48.7],[4.58,48.72],[4.85,48.78],[5.0,48.85],[5.08,49.0]],
+ F_k3:[[5.08,49.0],[5.15,49.15],[5.3,49.28],[5.5,49.28],[5.65,49.18],[5.7,49.02],[5.8,48.93],[6.02,48.93]],
+ G_k3:[[6.02,48.93],[6.2,48.82],[6.33,48.7],[6.45,48.58],[6.6,48.43],[6.8,48.33],[6.98,48.27],[7.08,48.1],[7.05,47.95],[7.1,47.8],[7.15,47.62],[7.13,47.49]],
+ B_k4:[[3.6,50.8],[3.35,50.6],[3.15,50.4],[3.0,50.2]],
+ C_k4:[[3.0,50.2],[2.95,50.0],[2.9,49.85],[2.9,49.7],[2.98,49.55]],
+ D_k4:[[2.98,49.55],[3.15,49.46],[3.33,49.42],[3.6,49.44],[3.78,49.44],[3.9,49.4]],
+ F_k4:[[5.1,49.22],[5.2,49.25],[5.32,49.28],[5.48,49.27],[5.6,49.2],[5.65,49.08],[5.75,48.98],[5.9,48.93],[6.05,48.93]],
+ B_race:[[3.6,50.8],[3.35,50.72],[3.15,50.6],[2.95,50.48],[2.82,50.4],[2.8,50.29],[2.69,50.2],[2.65,50.13]],
+ A_k6:[[2.75,51.15],[2.82,51.08],[2.87,51.03],[2.9,50.95],[3.0,50.9],[3.08,50.84],[3.0,50.75],[2.95,50.68],[2.87,50.6],[2.8,50.53]],
+ A_base:[...AHEAD,[2.87,50.94],[2.88,50.92],[2.93,50.91],[2.98,50.9],[3.01,50.87],[2.99,50.85],[2.97,50.83],[2.93,50.82],[2.89,50.81],[2.87,50.78],[2.88,50.76],[2.9,50.73],...ATAIL.slice(1)],
+ A_2:[...AHEAD,[2.87,50.94],[2.86,50.9],[2.9,50.88],[2.93,50.87],[2.94,50.85],[2.93,50.82],[2.89,50.81],[2.87,50.78],[2.88,50.76],[2.9,50.73],...ATAIL.slice(1)],
+ A_mess:[...AHEAD,[2.87,50.94],[2.86,50.9],[2.9,50.88],[2.93,50.87],[2.94,50.85],[2.94,50.82],[2.94,50.8],[2.93,50.78],[2.93,50.76],...ATAIL],
+ A_pass:[...AHEAD,[2.88,50.97],[2.93,50.95],[2.98,50.93],[3.03,50.9],[3.03,50.87],[3.0,50.84],[2.97,50.81],[2.95,50.8],[2.93,50.78],[2.93,50.76],...ATAIL],
+ A_lys:[...AHEAD,[2.87,50.94],[2.88,50.9],[2.92,50.87],[2.92,50.84],[2.88,50.82],[2.8,50.79],[2.7,50.74],[2.65,50.72],[2.6,50.66],[2.6,50.63],[2.63,50.59],[2.68,50.56],[2.75,50.54],[2.78,50.52]],
+ A_oct:[[3.42,51.28],[3.45,51.15],[3.5,50.98],[3.35,50.82],[3.33,50.7],[3.35,50.6]],
+ A_arm:[[3.8,51.25],[3.78,51.1],[3.78,51.03],[3.7,50.9],[3.82,50.78],[3.85,50.7]],
+ B_base:[[2.78,50.52],[2.78,50.48],[2.78,50.46],[2.77,50.42],[2.75,50.39],[2.77,50.36],[2.79,50.32],[2.8,50.29],[2.79,50.26],[2.69,50.2],[2.66,50.18],[2.65,50.13]],
+ B_alb:[...BHEAD,[2.78,50.42],[2.75,50.39],[2.77,50.36],[2.79,50.32],[2.81,50.28],[2.82,50.25],[2.84,50.22],[2.88,50.2],[2.93,50.19]],
+ B_arras:[...BHEAD,[2.79,50.43],[2.83,50.38],[2.87,50.35],[2.89,50.33],[2.9,50.3],[2.9,50.27],[2.89,50.25],[2.91,50.22],[2.93,50.19]],
+ B_mich:[...BHEAD,[2.79,50.43],[2.83,50.38],[2.87,50.35],[2.88,50.33],[2.85,50.29],[2.83,50.26],[2.79,50.21],[2.73,50.17],[2.71,50.14],[2.65,50.12]],
+ B_sep:[...BHEAD,[2.8,50.43],[2.86,50.37],[2.93,50.33],[3.02,50.28],[3.07,50.22],[3.05,50.17]],
+ B_oct:[[3.35,50.6],[3.42,50.45],[3.45,50.36],[3.5,50.25],[3.52,50.15]],
+ B_arm:[[3.85,50.7],[3.9,50.58],[4.0,50.48],[4.0,50.44],[4.08,50.33]],
+ C_base:[[2.65,50.13],[2.67,50.1],[2.65,50.08],[2.69,50.05],[2.69,50.02],[2.71,49.99],[2.78,49.98],[2.81,49.96],[2.81,49.94],[2.8,49.91],[2.8,49.88],[2.77,49.83],[2.77,49.75],[2.76,49.7],[2.77,49.64],[2.85,49.59],[2.92,49.51],[2.98,49.48]],
+ C_somme:[[2.65,50.13],[2.67,50.1],[2.67,50.08],[2.72,50.07],[2.78,50.075],[2.85,50.065],[2.9,50.05],[2.93,50.03],[2.93,49.98],[2.9,49.94],[2.9,49.915],[2.88,49.88],[2.85,49.85],[2.82,49.83],[2.78,49.815],[2.77,49.75],[2.76,49.7],[2.77,49.64],[2.85,49.59],[2.92,49.51],[2.98,49.48]],
+ C_hind:[[2.93,50.19],[2.97,50.17],[3.03,50.14],[3.07,50.1],[3.14,50.05],[3.15,49.99],...CS],
+ C_cmax:[[2.93,50.19],[2.97,50.17],[3.03,50.15],[3.07,50.16],[3.12,50.165],[3.17,50.15],[3.2,50.12],[3.22,50.09],[3.18,50.06],[3.15,49.99],...CS],
+ C_camb:[[2.93,50.19],[2.97,50.17],[3.03,50.14],[3.08,50.14],[3.13,50.13],[3.15,50.1],[3.12,50.06],[3.13,49.99],...CS],
+ C_mich:[...CMIC,[2.65,49.6],[2.8,49.57],[2.95,49.56],[3.05,49.55]],
+ C_gneis:[...CMIC,[2.6,49.6],[2.68,49.53],[2.78,49.49],[2.9,49.47],[3.0,49.48],[3.05,49.47]],
+ C_sep:[[3.05,50.17],[3.08,50.11],[3.12,50.05],[3.13,49.99],[3.18,49.96],[3.22,49.9],[3.25,49.84],[3.3,49.76],[3.33,49.68],[3.35,49.64],[3.37,49.6]],
+ C_oct:[[3.52,50.15],[3.56,50.1],[3.6,49.98],[3.55,49.88],[3.47,49.8],[3.55,49.7]],
+ C_arm:[[4.08,50.33],[4.15,50.2],[4.2,50.08],[4.25,50.02],[4.4,49.95]],
+ D_base:[[2.98,49.48],[3.12,49.44],[3.3,49.41],[3.4,49.4],[3.45,49.4],[3.52,49.41],[3.6,49.42],[3.7,49.43],[3.79,49.43],[3.9,49.4]],
+ D_alb:[[3.36,49.58],[3.36,49.52],[3.4,49.48],[3.42,49.45],[3.45,49.41],[3.52,49.41],[3.6,49.42],[3.7,49.43],[3.79,49.43],[3.9,49.4]],
+ D_niv:[[3.36,49.58],[3.36,49.52],[3.4,49.48],[3.43,49.455],[3.5,49.44],[3.58,49.44],[3.68,49.44],[3.78,49.44],[3.86,49.42],[3.9,49.4]],
+ D_malm:[[3.36,49.58],...DMAL],
+ D_mich:[[3.05,49.55],[3.15,49.57],[3.25,49.58],[3.33,49.55],...DMAL],
+ D_blu:[[3.05,49.55],[3.1,49.5],[3.15,49.45],...DBLU,[3.5,49.06],[3.64,49.075],[3.68,49.1]],
+ D_gneis:[[3.05,49.47],[3.15,49.45],...DBLU,[3.5,49.06],[3.64,49.075],[3.68,49.1]],
+ D_july:[[3.05,49.47],[3.15,49.45],...DBLU,[3.5,49.05],[3.55,49.02],[3.65,49.01],[3.72,49.04],[3.78,49.07]],
+ D_vesle:[[3.05,49.47],[3.15,49.45],[3.22,49.42],[3.3,49.39],[3.42,49.37],[3.53,49.34],[3.62,49.31],[3.68,49.31],[3.8,49.29],[3.88,49.27]],
+ D_sep:[[3.37,49.6],[3.38,49.52],[3.42,49.47],[3.5,49.43],[3.58,49.4],[3.7,49.36],[3.8,49.33],[3.88,49.3]],
+ D_oct:[[3.55,49.7],[3.65,49.65],[3.85,49.6],[3.9,49.57],[4.1,49.5],[4.2,49.5]],
+ D_arm:[[4.4,49.95],[4.52,49.92],[4.62,49.85],[4.72,49.77]],
+ E_base:[[3.9,49.4],[3.95,49.35],[4.0,49.32],[4.05,49.29],[4.1,49.27],[4.15,49.22],[4.3,49.2],[4.42,49.2],[4.55,49.19],[4.65,49.2],[4.78,49.19],[4.9,49.2],[5.07,49.2],[5.1,49.22]],
+ E_15:[[3.9,49.4],[3.95,49.35],[4.0,49.32],[4.05,49.29],...ETAIL],
+ E_blu:[[3.68,49.1],[3.75,49.1],[3.82,49.15],[3.88,49.2],[3.93,49.25],[3.97,49.29],[4.03,49.3],...ETAIL],
+ E_july:[[3.78,49.07],[3.85,49.1],[3.9,49.17],[3.93,49.25],[3.97,49.29],[4.03,49.3],...ETAIL],
+ E_vesle:[[3.88,49.27],[3.95,49.28],[4.03,49.3],...ETAIL],
+ E_oct:[[4.2,49.5],[4.37,49.5],[4.58,49.47],[4.7,49.4],[4.87,49.34],[5.05,49.34]],
+ E_arm:[[4.72,49.77],[4.85,49.73],[4.94,49.7],[5.05,49.63],[5.18,49.5]],
+ F_base:[[5.1,49.22],[5.17,49.245],[5.25,49.27],[5.32,49.28],[5.4,49.3],[5.48,49.27],[5.58,49.22],[5.64,49.15],[5.62,49.08],...SAL],
+ F_mar:[[5.1,49.22],[5.17,49.245],[5.25,49.27],[5.32,49.26],[5.38,49.235],[5.43,49.22],[5.5,49.2],[5.54,49.16],[5.59,49.1],...SAL],
+ F_max:[[5.1,49.22],[5.16,49.22],[5.22,49.215],[5.28,49.22],[5.34,49.225],[5.38,49.215],[5.42,49.2],[5.46,49.195],[5.5,49.18],[5.53,49.15],[5.58,49.1],...SAL],
+ F_nov:[[5.1,49.22],[5.16,49.22],[5.22,49.215],[5.28,49.22],[5.34,49.225],[5.38,49.225],[5.44,49.225],[5.49,49.205],[5.52,49.17],[5.55,49.14],[5.59,49.1],...SAL],
+ F_dec:[[5.1,49.22],[5.16,49.22],[5.22,49.215],[5.28,49.22],[5.34,49.23],[5.4,49.255],[5.46,49.245],[5.52,49.2],[5.55,49.15],[5.59,49.1],...SAL],
+ F_end:[[5.1,49.22],[5.17,49.235],[5.25,49.245],[5.33,49.245],[5.4,49.255],[5.46,49.245],[5.52,49.2],[5.55,49.15],[5.59,49.1],...SAL],
+ F_stm:[[5.1,49.22],[5.17,49.235],[5.25,49.245],[5.33,49.245],[5.4,49.255],[5.46,49.245],[5.52,49.2],[5.6,49.15],[5.65,49.1],[5.75,49.03],[5.85,48.98],[5.95,48.95],[6.05,48.93]],
+ F_oct:[[5.05,49.34],[5.18,49.33],[5.3,49.3],[5.42,49.3],[5.5,49.24],[5.6,49.15],[5.65,49.1],[5.75,49.03],[5.85,48.98],[5.95,48.95],[6.05,48.93]],
+ F_arm:[[5.18,49.5],[5.35,49.42],[5.48,49.35],[5.58,49.25],[5.68,49.12],[5.8,49.02],[5.92,48.97],[6.05,48.93]],
+ G_base:[[6.05,48.93],[6.2,48.88],[6.35,48.83],[6.5,48.76],[6.62,48.7],[6.75,48.63],[6.88,48.55],[7.0,48.47],[7.08,48.4],[7.15,48.3],[7.15,48.2],[7.12,48.05],[7.13,47.95],[7.17,47.87],[7.15,47.8],[7.18,47.7],[7.2,47.6],[7.16,47.53],[7.13,47.49]]
+};
+const TRACK={
+ A:[['1914-08-04','A_k0'],['1914-08-16','A_k1'],['1914-08-24','A_k2'],['1914-09-05','A_k3'],['1914-10-07','A_k3'],['1914-10-16','A_k6'],['1914-10-20','A_k6'],['1914-11-22','A_base'],['1915-04-21','A_base'],['1915-05-25','A_2'],['1917-06-06','A_2'],['1917-06-14','A_mess'],['1917-07-30','A_mess'],['1917-11-10','A_pass'],['1918-04-08','A_pass'],['1918-04-29','A_lys'],['1918-08-28','A_lys'],['1918-09-12','A_2'],['1918-09-27','A_2'],['1918-10-20','A_oct'],['1918-11-11','A_arm']],
+ B:[['1914-08-04','B_k0'],['1914-08-16','B_k1'],['1914-08-24','B_k2'],['1914-09-05','B_k3'],['1914-09-14','B_k4'],['1914-10-06','B_race'],['1914-10-16','B_base'],['1917-03-14','B_base'],['1917-04-05','B_alb'],['1917-04-08','B_alb'],['1917-05-16','B_arras'],['1918-03-20','B_arras'],['1918-04-05','B_mich'],['1918-08-20','B_mich'],['1918-09-26','B_sep'],['1918-10-20','B_oct'],['1918-11-11','B_arm']],
+ C:[['1914-08-04','C_k0'],['1914-08-16','C_k1'],['1914-08-24','C_k2'],['1914-09-05','C_k3'],['1914-09-14','C_k4'],['1914-10-01','C_base'],['1916-06-30','C_base'],['1916-11-18','C_somme'],['1917-03-14','C_somme'],['1917-04-05','C_hind'],['1917-11-19','C_hind'],['1917-11-27','C_cmax'],['1917-11-29','C_cmax'],['1917-12-07','C_camb'],['1918-03-20','C_camb'],['1918-04-05','C_mich'],['1918-06-08','C_mich'],['1918-06-13','C_gneis'],['1918-08-07','C_gneis'],['1918-08-22','C_base'],['1918-08-26','C_base'],['1918-09-26','C_sep'],['1918-10-20','C_oct'],['1918-11-11','C_arm']],
+ D:[['1914-08-04','D_k0'],['1914-08-16','D_k1'],['1914-08-24','D_k2'],['1914-09-05','D_k3'],['1914-09-14','D_k4'],['1914-10-01','D_base'],['1917-03-14','D_base'],['1917-04-05','D_alb'],['1917-04-15','D_alb'],['1917-05-08','D_niv'],['1917-10-22','D_niv'],['1917-11-02','D_malm'],['1918-03-20','D_malm'],['1918-04-05','D_mich'],['1918-05-26','D_mich'],['1918-06-06','D_blu'],['1918-06-08','D_blu'],['1918-06-13','D_gneis'],['1918-07-14','D_gneis'],['1918-07-17','D_july'],['1918-07-18','D_july'],['1918-08-06','D_vesle'],['1918-08-28','D_vesle'],['1918-09-26','D_sep'],['1918-10-20','D_oct'],['1918-11-11','D_arm']],
+ E:[['1914-08-04','E_k0'],['1914-08-16','E_k1'],['1914-08-24','E_k2'],['1914-09-05','E_k3'],['1914-09-14','E_base'],['1915-09-24','E_base'],['1915-10-06','E_15'],['1918-05-26','E_15'],['1918-06-06','E_blu'],['1918-07-14','E_blu'],['1918-07-17','E_july'],['1918-07-18','E_july'],['1918-08-06','E_vesle'],['1918-09-25','E_vesle'],['1918-10-20','E_oct'],['1918-11-11','E_arm']],
+ F:[['1914-08-04','F_k0'],['1914-08-16','F_k0'],['1914-08-24','F_k2'],['1914-09-05','F_k3'],['1914-09-14','F_k4'],['1914-09-19','F_k4'],['1914-09-25','F_base'],['1916-02-20','F_base'],['1916-03-01','F_mar'],['1916-07-12','F_max'],['1916-10-23','F_max'],['1916-11-03','F_nov'],['1916-12-14','F_nov'],['1916-12-18','F_dec'],['1917-08-19','F_dec'],['1917-08-26','F_end'],['1918-09-11','F_end'],['1918-09-16','F_stm'],['1918-09-25','F_stm'],['1918-10-20','F_oct'],['1918-11-11','F_arm']],
+ G:[['1914-08-04','G_k0'],['1914-08-16','G_k1'],['1914-08-24','G_k2'],['1914-09-05','G_k3'],['1914-09-14','G_base'],['1918-11-11','G_base']]
+};
+
+/* ---------- battles: name, start, end, lon, lat, note ---------- */
+const BATTLES=[
+ ['Liège','1914-08-05','1914-08-16',5.57,50.64,'The ring of forts is broken by heavy siege howitzers.'],
+ ['Mulhouse','1914-08-07','1914-08-10',7.34,47.75,'A French thrust into Alsace takes the city and loses it again.'],
+ ['Lorraine','1914-08-14','1914-08-25',6.75,48.85,'The French offensive is thrown back at Morhange and Sarrebourg.'],
+ ['The Ardennes','1914-08-21','1914-08-23',5.45,49.72,'French columns collide with the German centre in the forest.'],
+ ['Charleroi','1914-08-21','1914-08-23',4.44,50.41,'The French Fifth Army is forced back from the Sambre.'],
+ ['Mons','1914-08-23','1914-08-24',3.95,50.45,'First battle of the British Expeditionary Force.'],
+ ['Le Cateau','1914-08-26','1914-08-26',3.54,50.10,'A British rearguard stand during the retreat.'],
+ ['Guise','1914-08-29','1914-08-30',3.63,49.90,'A French counter-stroke checks the German Second Army.'],
+ ['The Marne','1914-09-05','1914-09-12',3.25,48.88,'The Allied counter-offensive that ended the German advance.'],
+ ['Grand Couronné','1914-09-04','1914-09-13',6.32,48.74,'The French hold the heights in front of Nancy.'],
+ ['First Aisne','1914-09-13','1914-09-28',3.55,49.44,'The Germans hold the ridge above the river. Trench warfare begins.'],
+ ['Siege of Antwerp','1914-09-28','1914-10-10',4.40,51.22,'The Belgian army escapes west along the coast.'],
+ ['First Arras','1914-10-01','1914-10-04',2.82,50.30,'The French keep the city during the race north.'],
+ ['The Yser','1914-10-16','1914-10-31',2.82,51.08,'The Belgians open the sluices and flood the plain.'],
+ ['First Ypres','1914-10-19','1914-11-22',2.96,50.86,'The Channel ports are saved and the salient is formed.'],
+ ['First Champagne','1914-12-20','1915-03-17',4.6,49.2,'A winter of French attacks for negligible gains.'],
+ ['Neuve Chapelle','1915-03-10','1915-03-13',2.78,50.58,'The British break in but cannot break through.'],
+ ['Second Ypres','1915-04-22','1915-05-25',2.93,50.89,'First large-scale use of poison gas in the west.'],
+ ['Second Artois','1915-05-09','1915-06-18',2.76,50.37,'The French reach the crest of Vimy Ridge and are pushed off it.'],
+ ['Loos','1915-09-25','1915-10-08',2.79,50.46,'First British use of gas.'],
+ ['Second Champagne','1915-09-25','1915-11-06',4.62,49.21,'The French take the first German position but not the second.'],
+ ['Verdun','1916-02-21','1916-12-18',5.42,49.2,'The longest battle of the war: 300 days.'],
+ ['The Somme','1916-07-01','1916-11-18',2.78,50.0,'More than a million casualties for an advance of about 10 km.'],
+ ['Arras and Vimy Ridge','1917-04-09','1917-05-16',2.84,50.33,'The Canadian Corps takes the ridge in four days.'],
+ ['Chemin des Dames','1917-04-16','1917-05-09',3.62,49.44,'The Nivelle Offensive fails and the French army mutinies.'],
+ ['Messines','1917-06-07','1917-06-14',2.9,50.77,'Nineteen mines are blown under the ridge.'],
+ ['Third Ypres','1917-07-31','1917-11-10',3.0,50.89,'Known by the name of its last objective, Passchendaele.'],
+ ['La Malmaison','1917-10-23','1917-10-27',3.48,49.46,'A limited French attack clears the western Chemin des Dames.'],
+ ['Cambrai','1917-11-20','1917-12-07',3.14,50.12,'The first mass tank attack.'],
+ ['Operation Michael','1918-03-21','1918-04-05',2.95,49.85,'The first and largest of the German spring offensives.'],
+ ['The Lys','1918-04-09','1918-04-29',2.72,50.68,'Operation Georgette threatens the Channel ports.'],
+ ['Villers-Bretonneux','1918-04-24','1918-04-25',2.52,49.87,'Australian and British troops retake the village in front of Amiens.'],
+ ['Third Aisne','1918-05-27','1918-06-06',3.6,49.3,'Operation Blücher–Yorck reaches the Marne.'],
+ ['Cantigny','1918-05-28','1918-05-28',2.49,49.66,'The first American offensive action of the war.'],
+ ['Belleau Wood','1918-06-01','1918-06-26',3.29,49.08,'US Marines and infantry clear the wood.'],
+ ['The Matz','1918-06-09','1918-06-13',2.8,49.52,'Operation Gneisenau is stopped by a French counter-attack.'],
+ ['Le Hamel','1918-07-04','1918-07-04',2.57,49.9,'A model combined-arms attack, over in 93 minutes.'],
+ ['Second Marne','1918-07-15','1918-08-06',3.55,49.15,'The last German offensive and the first great Allied counter-stroke.'],
+ ['Amiens','1918-08-08','1918-08-12',2.6,49.85,'The black day of the German Army.'],
+ ['Albert and Bapaume','1918-08-21','1918-09-03',2.8,50.08,'The British retake the old Somme battlefield.'],
+ ['Saint-Mihiel','1918-09-12','1918-09-15',5.7,48.93,'The American First Army clears the salient.'],
+ ['Meuse–Argonne','1918-09-26','1918-11-11',5.05,49.32,'The largest American battle of the war.'],
+ ['Canal du Nord','1918-09-27','1918-10-09',3.12,50.18,'The Canadians cross the canal; Cambrai falls on 9 October.'],
+ ['Saint-Quentin Canal','1918-09-29','1918-10-02',3.24,49.95,'The Hindenburg Line is broken.'],
+ ['Flanders','1918-09-28','1918-10-19',3.1,50.88,'King Albert\'s army group clears the Belgian coast.'],
+ ['The Selle','1918-10-17','1918-10-25',3.56,50.12,'The British force the river line at Le Cateau.'],
+ ['The Sambre','1918-11-04','1918-11-04',3.68,50.08,'The last large British attack of the war.'],
+ ['Armistice signed','1918-11-11','1918-11-11',2.91,49.43,'In a railway carriage in the forest of Compiègne.',1]
+].map(b=>({n:b[0],s:D(b[1]),e:D(b[2]),x:px(b[3]),y:py(b[4]),note:b[5],star:!!b[6]}));
+
+/* ---------- chapters: start, end, seconds, [lon,lat,span], title, text ---------- */
+const FULL=[3.6,49.575,11.2];
+const CH=[
+ ['1914-08-04','1914-08-24',9,FULL,'The invasion','Germany\'s armies cross into Luxembourg and Belgium, aiming to swing through the Low Countries and envelop the French from the north. Liège\'s forts are smashed by siege howitzers and Brussels falls on 20 August. French attacks into Lorraine and the Ardennes are thrown back with heavy loss, and the small British force is driven from Mons.'],
+ ['1914-08-24','1914-09-05',7,[3.8,49.7,8.5],'The Great Retreat','French and British armies fall back for two weeks across the Aisne and the Marne, fighting delaying actions at Le Cateau and Guise. Kluck\'s First Army turns south-east, passing east of Paris instead of around it, and exposes its flank. By 5 September German patrols are about 40 km from the capital.'],
+ ['1914-09-05','1914-09-14',7,[3.9,49.15,6.5],'The Marne','Joffre counter-attacks along the whole line from Paris to Verdun. A gap opens between the German First and Second Armies, the British and French push into it, and on 9 September the Germans order a retreat. They stop on the high ground north of the Aisne and dig in. The plan for a quick victory in the west has failed.'],
+ ['1914-09-14','1914-10-19',8,[3.4,50.1,6.5],'The Race to the Sea','Unable to break the Aisne position, each side tries to turn the other\'s open northern flank. Battles in Picardy, at Arras and at La Bassée carry the line north step by step. Antwerp falls on 10 October and the Belgian army retires to the Yser. Further south the Germans drive a wedge to the Meuse at Saint-Mihiel.'],
+ ['1914-10-19','1914-11-22',6,[2.9,50.8,3.2],'First Ypres','The last open gap closes in Flanders. The Belgians flood the Yser plain to hold the coast, and at Ypres the British and French stop repeated German attempts to reach the Channel ports. When the fighting dies down, a continuous trench line runs some 700 km from Nieuport to the Swiss frontier.'],
+ ['1914-11-22','1915-04-22',5,FULL,'Deadlock','Both armies dig in for the winter. French attacks in Champagne and a British one at Neuve Chapelle gain a few hundred metres at great cost. Until the spring of 1917 no offensive will move this line by more than about 10 km.'],
+ ['1915-04-22','1915-05-25',5,[2.92,50.85,2.2],'Second Ypres','On 22 April the Germans release chlorine gas north of Ypres, the first large-scale gas attack in the west. A gap opens but is not exploited. A month of fighting leaves the salient much smaller and the city in ruins, but still in Allied hands.'],
+ ['1915-05-25','1915-11-06',6,[3.7,49.85,5.5],'Artois, Loos and Champagne','Joffre tries to pinch out the great German bulge by attacking its two shoulders. The French assault Vimy Ridge in May and June. In September they attack again in Artois and in Champagne while the British, using gas for the first time, attack at Loos. The gains are a few kilometres at most.'],
+ ['1915-11-06','1916-02-21',3,[4.3,49.5,9],'Winter 1915–16','A quiet winter. Haig takes over the British command, and the Allies agree to attack together on the Somme in the summer. Falkenhayn plans to strike first, at a place the French will feel bound to hold.'],
+ ['1916-02-21','1916-07-01',9,[5.38,49.14,2.0],'Verdun','A million shells open the German attack on 21 February. Fort Douaumont falls four days later. Pétain holds the east bank and keeps the garrison supplied along a single road, the Voie Sacrée. The battle spreads to the west bank at Mort-Homme and Côte 304, and by early July the Germans are within 4 km of the city.'],
+ ['1916-07-01','1916-11-18',9,[2.8,49.95,2.0],'The Somme','The British and French attack astride the Somme on 1 July. The British lose 57,000 men on the first day, their heaviest loss in a single day. The battle goes on until November, with tanks used for the first time on 15 September. The Allies advance about 10 km, and the two sides together lose more than a million men.'],
+ ['1916-11-18','1916-12-18',4,[5.38,49.14,2.0],'Verdun regained','With German reserves drawn to the Somme, the French counter-attack at Verdun behind creeping barrages. Douaumont was retaken on 24 October and Fort Vaux on 2 November. A final push in mid-December restores most of the east bank. Ten months of fighting have cost some 700,000 casualties.'],
+ ['1916-12-18','1917-03-14',3,[3.4,49.8,6],'Winter 1916–17','The coldest winter of the war. Behind their front the Germans build a new fortified position, the Siegfriedstellung, which the Allies call the Hindenburg Line. Nivelle replaces Joffre and promises a decisive breakthrough on the Aisne.'],
+ ['1917-03-14','1917-04-05',6,[3.05,49.9,3.0],'Operation Alberich','The Germans abandon the great bulge between Arras and Soissons and fall back as much as 40 km to the Hindenburg Line, laying waste to everything they leave. The shorter front frees 13 divisions and upsets the Allied plans for the spring.'],
+ ['1917-04-05','1917-06-07',7,[3.3,49.9,3.6],'Arras and the Chemin des Dames','On 9 April the British attack at Arras and the Canadian Corps takes Vimy Ridge. A week later Nivelle\'s offensive on the Chemin des Dames fails with heavy losses, and mutinies spread through the French army. Pétain takes command and limits it to small, carefully prepared attacks.'],
+ ['1917-06-07','1917-07-31',4,[2.92,50.8,2.0],'Messines','Nineteen mines, dug under the German lines over many months, are fired beneath Messines Ridge at dawn on 7 June. The ridge south of Ypres is taken within hours, clearing the way for the main offensive in Flanders.'],
+ ['1917-07-31','1917-11-10',8,[2.97,50.86,1.8],'Passchendaele','The Third Battle of Ypres begins in the heaviest rain for years. Shelling has destroyed the drainage and the battlefield becomes a swamp. After three and a half months the Canadians take the ruins of Passchendaele, 8 km from the start line. Elsewhere the French retake the heights at Verdun in August and the western Chemin des Dames in October.'],
+ ['1917-11-10','1917-12-07',6,[3.12,50.1,2.0],'Cambrai','On 20 November the British attack the Hindenburg Line with more than 400 tanks and no preliminary bombardment, and advance up to 8 km in a day. Ten days later a German counter-attack takes back most of the ground. Both sides take note of the new methods.'],
+ ['1917-12-07','1918-03-21',3,FULL,'Winter 1917–18','Russia leaves the war and Germany moves about fifty divisions to the west. American troops are arriving, but slowly. Ludendorff decides to attack before they can count, and to strike the British first.'],
+ ['1918-03-21','1918-04-05',8,[2.9,49.85,3.0],'Operation Michael','German storm troops attack on an 80 km front behind a short, intense bombardment. The British Fifth Army gives way and the Germans advance up to 65 km, the largest movement in the west since 1914. They are stopped in front of Amiens. In the crisis Foch is appointed to coordinate the Allied armies.'],
+ ['1918-04-05','1918-04-29',6,[2.75,50.7,2.2],'Georgette: the Lys','Ludendorff shifts north and attacks in Flanders on 9 April, aiming at the rail junction of Hazebrouck and the Channel ports. Haig issues his "backs to the wall" order. The British give up the ground won at Passchendaele to shorten their line. Mont Kemmel is lost, but the front holds.'],
+ ['1918-04-29','1918-05-27',2,[3.3,49.6,5],'A pause','The Germans regroup. The Allied reserves are now concentrated in the north, behind the British. Ludendorff plans a diversion against the French on the Aisne to draw them away.'],
+ ['1918-05-27','1918-06-08',7,[3.45,49.3,3.0],'Blücher–Yorck: the Aisne','The attack on the Chemin des Dames breaks through thinly held lines and covers 20 km on the first day. In a week the Germans are on the Marne at Château-Thierry, about 90 km from Paris. American divisions enter the battle at Cantigny, Château-Thierry and Belleau Wood.'],
+ ['1918-06-08','1918-07-18',6,[3.3,49.35,3.4],'The last German offensives','An attack on the Matz in June tries to join the two great bulges and is stopped within days. On 15 July the Germans attack either side of Reims and cross the Marne near Dormans, but the French have been warned and the attack fails. Germany has lost nearly a million men since March and cannot replace them.'],
+ ['1918-07-18','1918-08-06',6,[3.45,49.3,3.0],'Second Marne','On 18 July French and American divisions with several hundred tanks strike the western face of the Marne bulge from the forest of Villers-Cotterêts. The Germans withdraw behind the Vesle and Soissons is freed on 2 August. From now on the initiative belongs to the Allies.'],
+ ['1918-08-06','1918-08-22',6,[2.75,49.82,2.6],'Amiens','British, Australian, Canadian and French troops attack east of Amiens on 8 August behind more than 500 tanks, in fog and without warning. They advance up to 11 km on the first day and take thousands of prisoners. Ludendorff calls it the black day of the German Army.'],
+ ['1918-08-22','1918-09-26',7,[3.9,49.9,7.5],'Back to the Hindenburg Line','Foch orders one attack after another along the front. The British retake the old Somme battlefield and break the Drocourt–Quéant line, the Germans give up the Lys salient, and on 12 September the American First Army clears the Saint-Mihiel salient, held since 1914. By late September the Germans are back on the line they started from in March.'],
+ ['1918-09-26','1918-10-20',8,[4.1,49.95,8],'The Grand Offensive','Four converging attacks open within four days: Americans and French in the Meuse–Argonne, the British at Cambrai and the Saint-Quentin Canal, and Belgians, British and French in Flanders. The Hindenburg Line is broken on 29 September. Lille, Ostend and Bruges are freed in mid-October, and Germany asks President Wilson for an armistice.'],
+ ['1918-10-20','1918-11-11',7,[4.2,50.0,8],'Pursuit','The German army retreats, fighting rearguard actions on the Selle, the Scheldt and the Sambre. The Americans and French reach the Meuse at Sedan and cut the main railway supplying the German front. Canadian troops enter Mons, where the British fought their first battle, early on 11 November.'],
+ ['1918-11-11','1918-11-11',5,FULL,'Armistice','The armistice is signed in a railway carriage in the forest of Compiègne shortly after 5 a.m. and takes effect at 11. The front lies almost entirely on Belgian and French soil, not far from where the fighting began. It has taken more than four years and millions of lives to move it there and back.']
+].map(c=>({s:D(c[0]),e:D(c[1]),dur:c[2],view:c[3],title:c[4],text:c[5]}));
+let TOTAL=0; CH.forEach(c=>{c.t0=TOTAL;TOTAL+=c.dur;});
+const LASTDAY=D('1918-11-11');
+const chapterAt=t=>{let i=0;while(i<CH.length-1&&t>=CH[i+1].t0)i++;return i;};
+const dayAt=t=>{const c=CH[chapterAt(t)];const f=Math.min(1,Math.max(0,(t-c.t0)/c.dur));return c.s+(c.e-c.s)*f;};
+const timeAt=day=>{for(const c of CH){if(c.e>c.s&&day>=c.s&&day<=c.e)return c.t0+(day-c.s)/(c.e-c.s)*c.dur;}return TOTAL;};
+
+/* ---------- front-line interpolation ---------- */
+const N=40, SEGS=['A','B','C','D','E','F','G'];
+function resample(pts,n){
+  const p=pts.map(q=>[px(q[0]),py(q[1])]), L=[0];
+  for(let i=1;i<p.length;i++)L.push(L[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));
+  const tot=L[L.length-1], out=new Float32Array(n*2); let j=0;
+  for(let k=0;k<n;k++){const t=tot*k/(n-1);while(j<p.length-2&&L[j+1]<t)j++;
+    const f=(t-L[j])/((L[j+1]-L[j])||1);out[k*2]=p[j][0]+(p[j+1][0]-p[j][0])*f;out[k*2+1]=p[j][1]+(p[j+1][1]-p[j][1])*f;}
+  return out;
+}
+const RS={}; for(const k in SH)RS[k]=resample(SH[k],N);
+const TR={}; SEGS.forEach(s=>{TR[s]=TRACK[s].map(e=>{if(!RS[e[1]])throw new Error('missing shape '+e[1]);return {d:D(e[0]),s:RS[e[1]]};});});
+const NP=SEGS.length*N;
+function lineAt(day,out){
+  out=out||new Float32Array(NP*2);
+  SEGS.forEach((sg,si)=>{const tr=TR[sg];let i=0;while(i<tr.length-2&&tr[i+1].d<=day)i++;
+    const a=tr[i],b=tr[i+1];let f=(day-a.d)/((b.d-a.d)||1);f=f<0?0:f>1?1:f;const o=si*N*2;
+    for(let j=0;j<N*2;j++)out[o+j]=a.s[j]+(b.s[j]-a.s[j])*f;});
+  return out;
+}
+const GHOSTS=[
+ {line:lineAt(D('1914-09-05')),show:D('1914-09-09'),label:'Sept. 1914',x:px(3.42),y:py(48.6)},
+ {line:lineAt(D('1916-06-30')),show:D('1917-03-22'),label:'1915–16',x:px(2.62),y:py(49.78)},
+ {line:lineAt(D('1918-07-17')),show:D('1918-07-24'),label:'July 1918',x:px(3.42),y:py(48.98)}
+];
+const PARIS=[px(2.35),py(48.86)];
+
+/* ---------- static paths ---------- */
+function mkPath(list,close){const p=new Path2D();list.forEach(pts=>{pts.forEach((q,i)=>{const x=px(q[0]),y=py(q[1]);i?p.lineTo(x,y):p.moveTo(x,y);});if(close)p.closePath();});return p;}
+const PATH={}; for(const k in POLY)PATH[k]=mkPath([POLY[k]],true);
+const P_COAST=mkPath([[...coastFR,...coastBE.slice(1),...coastNL.slice(1)],coastEN,[...iow,iow[0]]],false);
+const P_BORDERS=mkPath(BORDERS,false), P_RIVERS=mkPath(RIVERS,false);
+const P_REGION=mkPath([POLY.fr,POLY.be,POLY.lu],true);
+const P_GRAT=(()=>{const p=new Path2D();for(let lo=-2;lo<=9;lo++){p.moveTo(px(lo),0);p.lineTo(px(lo),MH);}for(let la=47;la<=52;la++){p.moveTo(0,py(la));p.lineTo(MW,py(la));}return p;})();
+
+/* ---------- paper ---------- */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const paper=document.createElement('canvas');
+(function(){const TW=1100,TH=Math.round(1100*MH/MW);paper.width=TW;paper.height=TH;const c=paper.getContext('2d'),r=rng(1914);
+  c.fillStyle='#fff';c.fillRect(0,0,TW,TH);
+  for(let i=0;i<150;i++){const x=r()*TW,y=r()*TH,rad=40+r()*240,a=.012+r()*.04;const g=c.createRadialGradient(x,y,0,x,y,rad);
+    g.addColorStop(0,'rgba(122,86,40,'+a+')');g.addColorStop(1,'rgba(122,86,40,0)');c.fillStyle=g;c.fillRect(x-rad,y-rad,rad*2,rad*2);}
+  for(let i=0;i<70;i++){const x=r()*TW,y=r()*TH,rad=1+r()*4;c.fillStyle='rgba(120,72,30,'+(.08+r()*.2)+')';c.beginPath();c.arc(x,y,rad,0,7);c.fill();}
+  const edge=(x0,y0,x1,y1,rx,ry,rw,rh)=>{const g=c.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,'rgba(92,60,24,.34)');g.addColorStop(1,'rgba(92,60,24,0)');c.fillStyle=g;c.fillRect(rx,ry,rw,rh);};
+  edge(0,0,80,0,0,0,80,TH);edge(TW,0,TW-80,0,TW-80,0,80,TH);edge(0,0,0,70,0,0,TW,70);edge(0,TH,0,TH-70,0,TH-70,TW,70);
+  const fold=(v,pos)=>{const g=v?c.createLinearGradient(pos-7,0,pos+7,0):c.createLinearGradient(0,pos-7,0,pos+7);
+    g.addColorStop(0,'rgba(80,55,30,0)');g.addColorStop(.5,'rgba(80,55,30,.2)');g.addColorStop(1,'rgba(80,55,30,0)');c.fillStyle=g;
+    if(v)c.fillRect(pos-7,0,14,TH);else c.fillRect(0,pos-7,TW,14);
+    c.fillStyle='rgba(70,48,26,.22)';if(v)c.fillRect(pos-.4,0,.8,TH);else c.fillRect(0,pos-.4,TW,.8);};
+  fold(1,TW/3);fold(1,TW*2/3);fold(0,TH/2);
+})();
+const grain=document.createElement('canvas');
+(function(){grain.width=grain.height=128;const c=grain.getContext('2d'),im=c.createImageData(128,128),r=rng(7);
+  for(let i=0;i<im.data.length;i+=4){const v=222+r()*33|0;im.data[i]=v;im.data[i+1]=v-3;im.data[i+2]=v-9;im.data[i+3]=255;}c.putImageData(im,0,0);})();
+const hatch=document.createElement('canvas');
+(function(){hatch.width=hatch.height=7;const c=hatch.getContext('2d');c.strokeStyle='rgba(62,72,54,.5)';c.lineWidth=1.1;c.beginPath();
+  c.moveTo(-1,8);c.lineTo(8,-1);c.moveTo(-4.5,4.5);c.lineTo(4.5,-4.5);c.moveTo(2.5,11.5);c.lineTo(11.5,2.5);c.stroke();})();
+
+/* ---------- state ---------- */
+const $=id=>document.getElementById(id);
+const cv=$('map'), ctx=cv.getContext('2d'), frame=$('frame'), tip=$('tip');
+const reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const INK='#3a2a1c', SEA='#cfd6c7', HALO='rgba(236,224,196,.82)', RED='#a8221b';
+let W=0,H=0,dpr=1,gPat=null,hPat=null;
+let t=0,playing=false,speed=1,follow=true,dirty=true,last=0,curCh=-1;
+const viewCam=v=>({x:px(v[0]),y:py(v[1]),z:(LON1-LON0)/v[2]});
+function clampCam(c){c.z=Math.min(9,Math.max(1,c.z));const hw=MW/(2*c.z),hh=MH/(2*c.z);
+  c.x=Math.min(MW-hw,Math.max(hw,c.x));c.y=Math.min(MH-hh,Math.max(hh,c.y));return c;}
+let cam=clampCam(viewCam(FULL)), manual=clampCam(viewCam(FULL));
+const line=new Float32Array(NP*2), scr=new Float32Array(NP*2);
+let hits=[];
+
+function resize(){const r=frame.getBoundingClientRect();W=r.width;H=r.height;dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.max(1,Math.round(W*dpr));cv.height=Math.max(1,Math.round(H*dpr));
+  gPat=ctx.createPattern(grain,'repeat');hPat=ctx.createPattern(hatch,'repeat');dirty=true;}
+
+function smooth(a,n){ctx.beginPath();ctx.moveTo(a[0],a[1]);
+  for(let i=1;i<n-1;i++){const mx=(a[i*2]+a[i*2+2])/2,my=(a[i*2+1]+a[i*2+3])/2;ctx.quadraticCurveTo(a[i*2],a[i*2+1],mx,my);}
+  ctx.lineTo(a[n*2-2],a[n*2-1]);}
+function spaced(txt,cx,cy,sp){let w=0;const ws=[];for(const ch of txt){const m=ctx.measureText(ch).width;ws.push(m);w+=m;}w+=sp*(txt.length-1);
+  let x=cx-w/2,i=0;ctx.textAlign='left';for(const ch of txt){ctx.fillText(ch,x,cy);x+=ws[i++]+sp;}}
+
+function draw(now){
+  const S=W/MW*cam.z, ox=W/2-cam.x*S, oy=H/2-cam.y*S;
+  const setMap=()=>ctx.setTransform(dpr*S,0,0,dpr*S,dpr*ox,dpr*oy), setScr=()=>ctx.setTransform(dpr,0,0,dpr,0,0);
+  const sx=x=>x*S+ox, sy=y=>y*S+oy, u=p=>p/S;
+  const day=dayAt(t);
+
+  setScr();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.setLineDash([]);
+  ctx.fillStyle=SEA;ctx.fillRect(0,0,W,H);
+
+  // engraved waterlines along the coasts
+  setMap();ctx.lineJoin='round';ctx.lineCap='round';
+  for(let k=6;k>=1;k--){ctx.strokeStyle='rgba(70,92,96,'+(.5-k*.065)+')';ctx.lineWidth=u(k*7.5);ctx.stroke(P_COAST);
+    ctx.strokeStyle=SEA;ctx.lineWidth=u(k*7.5-1.5);ctx.stroke(P_COAST);}
+
+  // land washes with hand-coloured edge bands
+  for(const k in PATH){ctx.fillStyle=WASH[k][0];ctx.fill(PATH[k]);}
+  for(const k in PATH){ctx.save();ctx.clip(PATH[k]);ctx.strokeStyle=WASH[k][1];ctx.lineWidth=u(11);ctx.stroke(PATH[k]);ctx.restore();}
+
+  ctx.strokeStyle='rgba(58,42,28,.13)';ctx.lineWidth=u(.7);ctx.stroke(P_GRAT);
+  ctx.strokeStyle='rgba(62,96,112,.75)';ctx.lineWidth=u(1.15);ctx.stroke(P_RIVERS);
+  ctx.strokeStyle='rgba(58,42,28,.8)';ctx.lineWidth=u(1);ctx.setLineDash([u(6),u(2.5),u(1.2),u(2.5)]);ctx.stroke(P_BORDERS);ctx.setLineDash([]);
+  ctx.strokeStyle=INK;ctx.lineWidth=u(1.1);ctx.stroke(P_COAST);
+
+  // printed lettering
+  const fade=Math.min(1,Math.max(.3,1.2-(cam.z-1)*.22));
+  ctx.textBaseline='middle';
+  PRINT.forEach(p=>{const x=px(p[1]),y=py(p[2]);
+    if(p[5]==='c'){ctx.font=p[3]+'px "IM Fell English SC","IM Fell English",Georgia,serif';ctx.fillStyle='rgba(58,42,28,'+(.42*fade)+')';spaced(p[0],x,y,p[4]);}
+    else{ctx.font='italic '+p[3]+'px "IM Fell English",Georgia,serif';ctx.fillStyle=p[5]==='s'?'rgba(52,84,98,'+(.8*fade)+')':'rgba(58,42,28,'+(.55*fade)+')';spaced(p[0],x,y,p[4]);}});
+  compass(px(2.42),py(51.74),22);
+  cartouche();
+
+  // territory held by the German armies
+  lineAt(day,line);
+  let near=1e9;
+  for(let i=0;i<NP;i++){scr[i*2]=sx(line[i*2]);scr[i*2+1]=sy(line[i*2+1]);const d=Math.hypot(line[i*2]-PARIS[0],line[i*2+1]-PARIS[1]);if(d<near)near=d;}
+  ctx.save();ctx.clip(P_REGION);setScr();
+  smooth(scr,NP);const far=9000*S;
+  ctx.lineTo(scr[NP*2-2],scr[NP*2-1]+far);ctx.lineTo(scr[NP*2-2]+far,scr[NP*2-1]+far);ctx.lineTo(scr[0]+far,scr[1]-far);ctx.lineTo(scr[0],scr[1]-far);ctx.closePath();
+  ctx.fillStyle='rgba(86,94,70,.17)';ctx.fill();ctx.fillStyle=hPat;ctx.fill();
+  ctx.restore();setScr();
+
+  // earlier lines
+  const placed=[];
+  const tmp=new Float32Array(NP*2);
+  GHOSTS.forEach(g=>{const a=Math.min(1,Math.max(0,(day-g.show)/6));if(a<=0)return;
+    for(let i=0;i<NP;i++){tmp[i*2]=sx(g.line[i*2]);tmp[i*2+1]=sy(g.line[i*2+1]);}
+    smooth(tmp,NP);ctx.setLineDash([5,4]);ctx.lineWidth=1.3;ctx.strokeStyle='rgba(92,40,30,'+(.5*a)+')';ctx.stroke();ctx.setLineDash([]);
+    ctx.font='italic 12.5px "IM Fell English",Georgia,serif';ctx.textAlign='left';ctx.fillStyle='rgba(92,40,30,'+(.75*a)+')';
+    ctx.lineWidth=3;ctx.strokeStyle=HALO;const lx=sx(g.x),ly=sy(g.y);ctx.strokeText(g.label,lx,ly);ctx.fillText(g.label,lx,ly);
+    placed.push([lx-2,ly-8,lx+ctx.measureText(g.label).width+2,ly+8]);});
+
+  // the front
+  smooth(scr,NP);ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.strokeStyle='rgba(240,230,204,.7)';ctx.lineWidth=7;ctx.stroke();
+  ctx.strokeStyle='#6e1410';ctx.lineWidth=4.2;ctx.stroke();
+  ctx.strokeStyle=RED;ctx.lineWidth=2.8;ctx.stroke();
+
+  // battles
+  hits=[];const active=[];
+  BATTLES.forEach(b=>{if(day<b.s-.01)return;const x=sx(b.x),y=sy(b.y);if(x<-20||x>W+20||y<-20||y>H+20)return;
+    const on=day<=b.e+.75&&!(b.star&&false);hits.push({x:x,y:y,b:b});
+    if(on)active.push([b,x,y]);else cross(x,y,3.2,'rgba(58,42,28,.6)',1.4);});
+  const pulse=reduced?0.5:(Math.sin(now/260)+1)/2;
+  active.forEach(a=>{const x=a[1],y=a[2];
+    ctx.beginPath();ctx.arc(x,y,11+pulse*7,0,6.3);ctx.fillStyle='rgba(168,34,27,'+(.2-pulse*.13)+')';ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,9.5,0,6.3);ctx.fillStyle='rgba(240,230,204,.92)';ctx.fill();ctx.strokeStyle=RED;ctx.lineWidth=1.2;ctx.stroke();
+    if(a[0].star){ctx.fillStyle=RED;ctx.beginPath();ctx.arc(x,y,3.6,0,6.3);ctx.fill();}else swords(x,y,5,'#8c1a15');});
+  active.forEach(a=>{ctx.font='15px "IM Fell English SC","IM Fell English",Georgia,serif';
+    put(a[0].n,a[1],a[2],13,'#7d1611',placed,a[1]>W*.72);});
+
+  // towns
+  const tier=cam.z>=2.6?3:cam.z>=1.45?2:1;
+  CITIES.forEach(c=>{if(c[3]>tier)return;const x=sx(px(c[1])),y=sy(py(c[2]));if(x<8||x>W-8||y<12||y>H-8)return;
+    const cap=c[3]===0;ctx.font=(cap?'15px "IM Fell English SC","IM Fell English",Georgia,serif':(c[3]===3?'italic 12.5px':'13.5px')+' "IM Fell English",Georgia,serif');
+    if(!put(c[0],x,y,cap?7:5.5,INK,placed,!!c[4]))return;
+    ctx.fillStyle=INK;ctx.strokeStyle=INK;ctx.lineWidth=1;
+    if(cap){ctx.beginPath();ctx.arc(x,y,4,0,6.3);ctx.fillStyle='#eadcbc';ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(x,y,1.7,0,6.3);ctx.fillStyle=INK;ctx.fill();}
+    else if(c[3]===1){ctx.beginPath();ctx.arc(x,y,2.6,0,6.3);ctx.fillStyle='#eadcbc';ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(x,y,.9,0,6.3);ctx.fillStyle=INK;ctx.fill();}
+    else{ctx.beginPath();ctx.arc(x,y,1.7,0,6.3);ctx.fill();}});
+  if(cam.z>=1.25){ctx.font='italic 12px "IM Fell English",Georgia,serif';
+    RIVER_LABELS.forEach(r=>{const x=sx(px(r[1])),y=sy(py(r[2]));if(x<10||x>W-40||y<14||y>H-10)return;put(r[0],x,y,0,'rgba(44,80,98,.95)',placed,false);});}
+
+  // paper: stains and folds travel with the sheet, grain stays with the eye
+  setMap();ctx.globalCompositeOperation='multiply';ctx.drawImage(paper,0,0,MW,MH);
+  setScr();ctx.globalAlpha=.55;ctx.fillStyle=gPat;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.hypot(W,H)*.56);
+  vg.addColorStop(0,'rgba(255,255,255,1)');vg.addColorStop(1,'rgba(198,172,132,1)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='source-over';
+
+  // neatline and graticule figures
+  ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.strokeRect(5,5,W-10,H-10);ctx.lineWidth=.8;ctx.strokeRect(9,9,W-18,H-18);
+  ctx.font='11px "IM Fell English",Georgia,serif';ctx.fillStyle='rgba(58,42,28,.8)';ctx.textBaseline='middle';
+  if(W>420){ctx.textAlign='center';
+    for(let lo=-2;lo<=9;lo++){const x=sx(px(lo));if(x>40&&x<W-40)ctx.fillText(Math.abs(lo)+'°'+(lo<0?'W':lo>0?'E':''),x,18);}
+    ctx.textAlign='left';
+    for(let la=47;la<=52;la++){const y=sy(py(la));if(y>30&&y<H-24)ctx.fillText(la+'°N',13,y-7);}}
+
+  $('paris').textContent=Math.round(near*KM)+' km';
+
+  function put(txt,x,y,off,color,pl,left){const w=ctx.measureText(txt).width;const x0=left?x-off-w:x+off;
+    const r=[x0-2,y-8,x0+w+2,y+8];for(const q of pl){if(r[0]<q[2]&&r[2]>q[0]&&r[1]<q[3]&&r[3]>q[1])return false;}
+    pl.push(r);ctx.textAlign='left';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=3.2;ctx.strokeStyle=HALO;ctx.strokeText(txt,x0,y);ctx.fillStyle=color;ctx.fillText(txt,x0,y);return true;}
+  function cross(x,y,r,col,lw){ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x-r,y-r);ctx.lineTo(x+r,y+r);ctx.moveTo(x+r,y-r);ctx.lineTo(x-r,y+r);ctx.stroke();}
+  function swords(x,y,r,col){cross(x,y,r,col,1.7);ctx.beginPath();ctx.moveTo(x-r*.85,y+r*.2);ctx.lineTo(x-r*.2,y+r*.85);ctx.moveTo(x+r*.85,y+r*.2);ctx.lineTo(x+r*.2,y+r*.85);ctx.stroke();}
+  function compass(cx,cy,r){ctx.save();ctx.globalAlpha=.8;ctx.strokeStyle=INK;ctx.lineWidth=u(.7);
+    ctx.beginPath();ctx.arc(cx,cy,r*.62,0,6.3);ctx.stroke();ctx.beginPath();ctx.arc(cx,cy,r*.56,0,6.3);ctx.stroke();
+    [1,0].forEach(minor=>{for(let i=minor;i<8;i+=2){const a=i*Math.PI/4-Math.PI/2,len=(minor?.6:1)*r,w=r*(minor?.09:.13);
+      const tx=cx+Math.cos(a)*len,ty=cy+Math.sin(a)*len,nx=Math.cos(a+Math.PI/2)*w,ny=Math.sin(a+Math.PI/2)*w;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+nx,cy+ny);ctx.lineTo(tx,ty);ctx.closePath();ctx.fillStyle=INK;ctx.fill();
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx-nx,cy-ny);ctx.lineTo(tx,ty);ctx.closePath();ctx.fillStyle='#e6dcc0';ctx.fill();ctx.stroke();}});
+    ctx.font='8px "IM Fell English SC","IM Fell English",Georgia,serif';ctx.fillStyle=INK;ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('N',cx,cy-r-2.5);ctx.restore();}
+  function cartouche(){const x=14,y=437,w=188,h=82;ctx.save();
+    ctx.fillStyle='rgba(240,231,206,.9)';ctx.fillRect(x,y,w,h);ctx.strokeStyle=INK;ctx.lineWidth=u(1.6);ctx.strokeRect(x,y,w,h);ctx.lineWidth=u(.7);ctx.strokeRect(x+2.2,y+2.2,w-4.4,h-4.4);
+    ctx.fillStyle=INK;ctx.textBaseline='middle';
+    ctx.font='13.5px "IM Fell English SC","IM Fell English",Georgia,serif';spaced('THE WESTERN FRONT',x+w/2,y+16,1.6);
+    ctx.font='8.5px "IM Fell English",Georgia,serif';spaced('1914 – 1918',x+w/2,y+29.5,1.2);
+    ctx.font='italic 6.3px "IM Fell English",Georgia,serif';spaced('from the North Sea to the Swiss frontier',x+w/2,y+41,.1);
+    const mi=1.609/KM,bx=x+(w-100*mi)/2,by=y+54;ctx.lineWidth=u(.7);
+    for(let i=0;i<4;i++){ctx.fillStyle=i%2?'#efe6ca':INK;ctx.fillRect(bx+i*25*mi,by,25*mi,2.6);}
+    ctx.strokeRect(bx,by,100*mi,2.6);ctx.fillStyle=INK;ctx.font='5.5px "IM Fell English",Georgia,serif';
+    [[0,'0'],[50,'50'],[100,'100 miles']].forEach(q=>{ctx.textAlign='left';const tw=ctx.measureText(q[1]).width;ctx.fillText(q[1],bx+q[0]*mi-(q[0]===100?ctx.measureText('100').width/2:tw/2),by+9.5);});
+    ctx.font='italic 5.2px "IM Fell English",Georgia,serif';spaced('Frontiers as of August 1914',x+w/2,y+73,.1);
+    ctx.restore();}
+}
+
+/* ---------- sidebar ---------- */
+const list=$('chapters');
+CH.forEach((c,i)=>{const li=document.createElement('li'),b=document.createElement('button');b.type='button';
+  const d=dt(c.s);b.innerHTML='<small>'+MON[d.getUTCMonth()]+' '+d.getUTCFullYear()+'</small><span></span>';b.lastChild.textContent=c.title;
+  b.addEventListener('click',()=>{setT(c.t0+.001);});li.appendChild(b);list.appendChild(li);c.btn=b;});
+function showChapter(i){curCh=i;const c=CH[i];
+  $('chWhen').textContent=range(c.s,c.e);$('chTitle').textContent=c.title;$('chText').textContent=c.text;
+  const ul=$('chBattles');ul.textContent='';
+  BATTLES.filter(b=>b.s<=c.e&&b.e>=c.s&&(c.e>c.s||b.star)).forEach(b=>{const li=document.createElement('li'),a=document.createElement('span'),d=document.createElement('span');
+    a.textContent=b.n;d.textContent=range(b.s,b.e);li.appendChild(a);li.appendChild(d);li._b=b;ul.appendChild(li);});
+  ul.hidden=!ul.children.length;
+  CH.forEach((q,j)=>{if(j===i)q.btn.setAttribute('aria-current','true');else q.btn.removeAttribute('aria-current');});
+  const li=c.btn.parentNode;if(list.scrollHeight>list.clientHeight)list.scrollTop=li.offsetTop-list.offsetTop-list.clientHeight/2+li.offsetHeight/2;
+}
+let lastDayShown=-1;
+function hud(){const day=dayAt(t),rd=Math.round(day);
+  if(rd!==lastDayShown){lastDayShown=rd;$('date').textContent=fmt(day);$('daycount').innerHTML='Day <b>'+(rd+1).toLocaleString('en-GB')+'</b> of '+(LASTDAY+1).toLocaleString('en-GB');
+    document.querySelectorAll('#chBattles li').forEach(li=>{li.classList.toggle('on',day>=li._b.s-.01&&day<=li._b.e+.75);});}
+  const i=chapterAt(t);if(i!==curCh){showChapter(i);lastDayShown=-1;hud();}
+  if(document.activeElement!==scrub||playing)scrub.value=t;}
+
+/* ---------- transport ---------- */
+const scrub=$('scrub'),playBtn=$('play');
+scrub.max=TOTAL;
+function setT(v){t=Math.min(TOTAL,Math.max(0,v));dirty=true;hud();}
+function setPlaying(p){playing=p;playBtn.textContent=p?'Pause':(t>=TOTAL-.01?'Replay':'Play');last=0;dirty=true;}
+playBtn.addEventListener('click',()=>{if(!playing&&t>=TOTAL-.01)setT(0);setPlaying(!playing);});
+scrub.addEventListener('input',()=>{setT(+scrub.value);if(!playing)playBtn.textContent=t>=TOTAL-.01?'Replay':'Play';});
+$('speed').addEventListener('change',e=>{speed=+e.target.value;});
+$('follow').addEventListener('change',e=>{follow=e.target.checked;if(!follow)manual={x:cam.x,y:cam.y,z:cam.z};dirty=true;});
+function unfollow(){if(follow){follow=false;$('follow').checked=false;manual={x:cam.x,y:cam.y,z:cam.z};}}
+function zoomBy(f,wx,wy){unfollow();const z0=manual.z,z1=Math.min(9,Math.max(1,z0*f));
+  if(wx!=null){manual.x=wx-(wx-manual.x)*z0/z1;manual.y=wy-(wy-manual.y)*z0/z1;}manual.z=z1;clampCam(manual);dirty=true;}
+$('zin').addEventListener('click',()=>zoomBy(1.6));
+$('zout').addEventListener('click',()=>zoomBy(1/1.6));
+document.addEventListener('keydown',e=>{if(e.code!=='Space')return;const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='button'||tag==='select'||tag==='input'||tag==='a')return;e.preventDefault();playBtn.click();});
+
+(function(){const el=$('ticks');[1914,1915,1916,1917,1918].forEach(y=>{const s=document.createElement('span');
+  s.textContent=y;s.style.left=(y===1914?0:timeAt(D(y+'-01-01'))/TOTAL*100)+'%';if(y===1914)s.style.transform='none';el.appendChild(s);});})();
+
+/* ---------- pointer: tooltips, drag to pan, double-click to zoom ---------- */
+function world(e){const r=cv.getBoundingClientRect(),S=W/MW*cam.z;return {mx:e.clientX-r.left,my:e.clientY-r.top,wx:(e.clientX-r.left-W/2)/S+cam.x,wy:(e.clientY-r.top-H/2)/S+cam.y};}
+function showTip(e){const p=world(e);let best=null,bd=18;hits.forEach(h=>{const d=Math.hypot(h.x-p.mx,h.y-p.my);if(d<bd){bd=d;best=h;}});
+  if(!best){tip.hidden=true;return;}
+  tip.textContent='';const s=document.createElement('strong'),d=document.createElement('span'),n=document.createElement('div');
+  s.textContent=best.b.n;d.textContent=range(best.b.s,best.b.e);n.textContent=best.b.note;tip.appendChild(s);tip.appendChild(d);tip.appendChild(n);tip.hidden=false;
+  const tw=tip.offsetWidth,th=tip.offsetHeight;let x=best.x+14,y=best.y+12;if(x+tw>W-8)x=best.x-tw-14;if(y+th>H-8)y=best.y-th-12;
+  tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px';}
+let drag=null;
+cv.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0){drag={x:e.clientX,y:e.clientY,moved:false};cv.setPointerCapture(e.pointerId);}else showTip(e);});
+cv.addEventListener('pointermove',e=>{if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    if(!drag.moved&&Math.hypot(dx,dy)<4)return;if(!drag.moved){drag.moved=true;unfollow();cv.classList.add('drag');tip.hidden=true;}
+    const S=W/MW*cam.z;manual.x-=dx/S;manual.y-=dy/S;clampCam(manual);cam.x=manual.x;cam.y=manual.y;drag.x=e.clientX;drag.y=e.clientY;dirty=true;}
+  else if(e.pointerType==='mouse')showTip(e);});
+const endDrag=()=>{drag=null;cv.classList.remove('drag');};
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('pointerleave',()=>{if(!drag)tip.hidden=true;});
+cv.addEventListener('dblclick',e=>{const p=world(e);zoomBy(1.8,p.wx,p.wy);});
+cv.addEventListener('wheel',e=>{e.preventDefault();tip.hidden=true;
+  let dy=e.deltaY;if(e.deltaMode===1)dy*=16;else if(e.deltaMode===2)dy*=H;
+  dy=Math.max(-300,Math.min(300,dy));const p=world(e);zoomBy(Math.exp(-dy*.0022),p.wx,p.wy);},{passive:false});
+
+/* ---------- loop ---------- */
+function tick(now){
+  if(playing){const dtm=last?Math.min(.1,(now-last)/1000):0;last=now;t+=dtm*speed;
+    if(t>=TOTAL){t=TOTAL;setPlaying(false);}hud();dirty=true;}
+  const target=follow?clampCam(viewCam(CH[chapterAt(t)].view)):manual;
+  const dx=target.x-cam.x,dy=target.y-cam.y,dz=target.z-cam.z;
+  if(Math.abs(dx)>.05||Math.abs(dy)>.05||Math.abs(dz)>.002){const k=reduced?1:.07;cam.x+=dx*k;cam.y+=dy*k;cam.z+=dz*k;clampCam(cam);dirty=true;}
+  if(dirty&&W>0){dirty=false;draw(now);}
+  requestAnimationFrame(tick);
+}
+new ResizeObserver(resize).observe(frame);
+resize();hud();
+if(document.fonts&&document.fonts.load){Promise.all(['15px "IM Fell English"','italic 15px "IM Fell English"','15px "IM Fell English SC"'].map(f=>document.fonts.load(f))).then(()=>{dirty=true;},()=>{});
+  document.fonts.ready.then(()=>{dirty=true;});}
+requestAnimationFrame(tick);
+if(!reduced)setTimeout(()=>{if(t===0&&!playing)setPlaying(true);},900);
+})();
+</script>
+</body>
+</html>
